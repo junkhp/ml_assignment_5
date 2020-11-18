@@ -7,7 +7,6 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 import csv
-from pprint import pprint
 
 
 # 切断冪関数のh0~h3まで(前半)
@@ -31,8 +30,9 @@ def regression_spline(beta_hat, K, x):
     return y
 
 
+# Kに対して回帰を実行
 def regression(K):
-    # K = 4
+    # csvファイルを読み込み
     csv_path = 'TrainingDataForAssingment5.csv'
     data_num = 120
     with open(csv_path) as csv_file:
@@ -40,6 +40,7 @@ def regression(K):
         data_list = [row for row in reader]
     data_list.pop(0)
 
+    # データをプロット
     for data in data_list:
         plt.plot(float(data[1]), float(data[2]), marker='.')
     # plt.savefig('data.png')
@@ -49,11 +50,13 @@ def regression(K):
     x_np = [float(data[1]) for data in data_list]
     # print(y_list)
 
+    # Xを求める
     x_list = []
     for i in range(data_num):
         x = float(data_list[i][1])
-        # print(x)
+        # h0~h3
         sub_first_list = [first_function(d, x) for d in range(4)]
+        # h4~h_(K+3)
         sub_second_list = [second_function(i, x, K) for i in range(1, K + 1)]
         sub_list = sub_first_list + sub_second_list
         x_list.append(sub_list)
@@ -62,8 +65,9 @@ def regression(K):
     y_mat = np.matrix(y_list)
     # (xtx)^-1xty
     beta_hat = (x_mat.T * x_mat) ** -1 * x_mat.T * y_mat.T
-    # print(beta_hat)
 
+
+    スプライン関数を描画
     x = np.linspace(0, 10, 100)
     y = np.array([regression_spline(beta_hat, K, p) for p in x])
     plt.plot(x, y)
@@ -72,12 +76,9 @@ def regression(K):
 
     # CVLOOを求める(magic formula)
     h_for_cv_loo = x_mat * (x_mat.T * x_mat) ** -1 * x_mat.T
-
     cv_loo_magic = 0
     for i in range(data_num):
-        cv_loo_magic += ((y_np[i] - regression_spline(beta_hat, K, x_np[i])) \
-                / (1 - h_for_cv_loo[i, i])) ** 2
-        
+        cv_loo_magic += ((y_np[i] - regression_spline(beta_hat, K, x_np[i])) / (1 - h_for_cv_loo[i, i])) ** 2    
     cv_loo_magic = cv_loo_magic / data_num
     # print(cv_loo_magic)
 
@@ -91,7 +92,6 @@ def regression(K):
         cv_loo_all += cv_loo / (data_num - 1)
 
     cv_loo_all = cv_loo_all/data_num
-    print(cv_loo_all)
 
     return cv_loo_magic, cv_loo_all
 
@@ -113,5 +113,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # regression(4)
     main()
